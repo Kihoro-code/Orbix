@@ -1,71 +1,81 @@
 /// <reference types="@react-three/fiber" />
 import { useRef, useMemo, useState, useCallback } from "react";
-import { Canvas, useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
+import { Canvas, useFrame, useThree, useLoader, type ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, Stars, Html } from "@react-three/drei";
 import * as THREE from "three";
 import type { APILaunch } from "../../services/types";
 import { getMissionName, getRocketName, getAgencyName, getOrbitAbbrev, getLaunchImage, getStatusConfig } from "../../services/formatters";
 import { DS } from "./shared";
 
+// NASA Blue Marble textures (public domain)
+const EARTH_TEXTURE = "https://unpkg.com/three-globe@2.41.12/example/img/earth-blue-marble.jpg";
+const EARTH_BUMP = "https://unpkg.com/three-globe@2.41.12/example/img/earth-topology.png";
+const EARTH_SPECULAR = "https://unpkg.com/three-globe@2.41.12/example/img/earth-water.png";
+
 /* ─── Earth Sphere ─── */
 function Earth() {
   const meshRef = useRef<THREE.Mesh>(null!);
+  const cloudsRef = useRef<THREE.Mesh>(null!);
+
+  const [earthMap, bumpMap, specMap] = useLoader(THREE.TextureLoader, [
+    EARTH_TEXTURE,
+    EARTH_BUMP,
+    EARTH_SPECULAR,
+  ]);
 
   useFrame((_, delta) => {
     meshRef.current.rotation.y += delta * 0.015;
+    if (cloudsRef.current) {
+      cloudsRef.current.rotation.y += delta * 0.02;
+    }
   });
 
   return (
     <group>
-      {/* Earth body */}
+      {/* Earth body with texture */}
       <mesh ref={meshRef}>
         <sphereGeometry args={[2, 64, 64]} />
-        <meshStandardMaterial
-          color="#1a3a5c"
-          emissive="#0d1b2a"
-          emissiveIntensity={0.3}
-          roughness={0.8}
-          metalness={0.1}
+        <meshPhongMaterial
+          map={earthMap}
+          bumpMap={bumpMap}
+          bumpScale={0.04}
+          specularMap={specMap}
+          specular={new THREE.Color("#333333")}
+          shininess={15}
         />
       </mesh>
 
-      {/* Wireframe grid overlay */}
-      <mesh>
-        <sphereGeometry args={[2.005, 32, 32]} />
-        <meshBasicMaterial
-          color="#4fc3f7"
-          wireframe
-          transparent
-          opacity={0.06}
-        />
-      </mesh>
-
-      {/* Atmosphere glow */}
-      <mesh>
-        <sphereGeometry args={[2.15, 32, 32]} />
-        <meshBasicMaterial
-          color="#4fc3f7"
+      {/* Cloud layer */}
+      <mesh ref={cloudsRef}>
+        <sphereGeometry args={[2.02, 48, 48]} />
+        <meshPhongMaterial
+          color="#ffffff"
           transparent
           opacity={0.08}
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* Atmosphere glow (outer) */}
+      <mesh>
+        <sphereGeometry args={[2.2, 32, 32]} />
+        <meshBasicMaterial
+          color="#4fc3f7"
+          transparent
+          opacity={0.07}
           side={THREE.BackSide}
         />
       </mesh>
 
-      {/* Inner bright glow */}
+      {/* Atmosphere glow (inner) */}
       <mesh>
-        <sphereGeometry args={[2.08, 32, 32]} />
+        <sphereGeometry args={[2.12, 32, 32]} />
         <meshBasicMaterial
-          color="#4fc3f7"
+          color="#81d4fa"
           transparent
           opacity={0.04}
           side={THREE.BackSide}
         />
-      </mesh>
-
-      {/* Equator ring */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[2.01, 2.03, 64]} />
-        <meshBasicMaterial color="#4fc3f7" transparent opacity={0.15} side={THREE.DoubleSide} />
       </mesh>
     </group>
   );
@@ -145,49 +155,52 @@ function SatelliteDot({
   onSelect: (launch: APILaunch, pos: THREE.Vector3) => void;
   isSelected: boolean;
 }) {
-  const groupRef = useRef<THREE.Group>(null!);
-  const dotRef = useRef<THREE.Mesh>(null!);
+  const dotGroupRef = useRef<THREE.Group>(null!);
   const [hovered, setHovered] = useState(false);
   const angleRef = useRef(startAngle);
 
   const statusConfig = getStatusConfig(launch.status);
   const color = new THREE.Color(statusConfig.color);
 
+  // Move the entire group (dot + glow together) each frame
   useFrame((_, delta) => {
     angleRef.current += delta * speed;
     const angle = angleRef.current;
     const x = Math.cos(angle) * radius;
     const z = Math.sin(angle) * radius;
-    dotRef.current.position.set(x, 0, z);
+    dotGroupRef.current.position.set(x, 0, z);
   });
 
   const handleClick = useCallback((e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
-    if (dotRef.current) {
+    if (dotGroupRef.current) {
       const worldPos = new THREE.Vector3();
-      dotRef.current.getWorldPosition(worldPos);
+      dotGroupRef.current.getWorldPosition(worldPos);
       onSelect(launch, worldPos);
     }
   }, [launch, onSelect]);
 
   const { gl } = useThree();
+  const active = hovered || isSelected;
 
   return (
     <group rotation={[inclination, ascending, 0]}>
-      <group ref={groupRef}>
-        <mesh
-          ref={dotRef}
-          onClick={handleClick}
-          onPointerEnter={() => { setHovered(true); gl.domElement.style.cursor = "pointer"; }}
-          onPointerLeave={() => { setHovered(false); gl.domElement.style.cursor = "auto"; }}
-        >
-          <sphereGeometry args={[hovered || isSelected ? 0.1 : 0.06, 16, 16]} />
+      {/* This group moves along the orbit — both meshes stay together */}
+      <group
+        ref={dotGroupRef}
+        onClick={handleClick}
+        onPointerEnter={() => { setHovered(true); gl.domElement.style.cursor = "pointer"; }}
+        onPointerLeave={() => { setHovered(false); gl.domElement.style.cursor = "auto"; }}
+      >
+        {/* Core dot */}
+        <mesh>
+          <sphereGeometry args={[active ? 0.08 : 0.05, 12, 12]} />
           <meshBasicMaterial color={color} />
         </mesh>
-        {/* Glow */}
-        <mesh position={dotRef.current?.position ?? [0, 0, 0]}>
-          <sphereGeometry args={[hovered || isSelected ? 0.18 : 0.12, 16, 16]} />
-          <meshBasicMaterial color={color} transparent opacity={0.2} />
+        {/* Glow halo — same position, just bigger + transparent */}
+        <mesh>
+          <sphereGeometry args={[active ? 0.14 : 0.09, 12, 12]} />
+          <meshBasicMaterial color={color} transparent opacity={active ? 0.25 : 0.12} />
         </mesh>
       </group>
     </group>
