@@ -1,0 +1,208 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 16px;
+
+  /* LaunchPad Design System Tokens */
+  --lp-bg: #0a0a0f;
+  --lp-surface: #0d1b2a;
+  --lp-card: #131f30;
+  --lp-primary: #ff6b35;
+  --lp-secondary: #4fc3f7;
+  --lp-success: #00e676;
+  --lp-warning: #ffc107;
+  --lp-error: #ff1744;
+  --lp-text-heading: #ffffff;
+  --lp-text-body: #b0bec5;
+  --lp-text-muted: #546e7a;
+  --lp-border: rgba(255, 255, 255, 0.05);
+  --lp-border-hover: rgba(79, 195, 247, 0.4);
+  --lp-glow-primary: rgba(255, 107, 53, 0.6);
+  --lp-glow-secondary: rgba(79, 195, 247, 0.4);
+  --lp-glass: rgba(13, 27, 42, 0.6);
+  --lp-glass-card: rgba(19, 31, 48, 0.7);
+
+  --background: var(--lp-bg);
+  --foreground: var(--lp-text-heading);
+  --card: var(--lp-card);
+  --card-foreground: var(--lp-text-heading);
+  --popover: var(--lp-surface);
+  --popover-foreground: var(--lp-text-heading);
+  --primary: var(--lp-primary);
+  --primary-foreground: #ffffff;
+  --secondary: var(--lp-secondary);
+  --secondary-foreground: #0a0a0f;
+  --muted: var(--lp-surface);
+  --muted-foreground: var(--lp-text-muted);
+  --accent: var(--lp-secondary);
+  --accent-foreground: #0a0a0f;
+  --destructive: var(--lp-error);
+  --destructive-foreground: #ffffff;
+  --border: var(--lp-border);
+  --input: transparent;
+  --input-background: var(--lp-surface);
+  --switch-background: var(--lp-text-muted);
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: var(--lp-secondary);
+  --chart-1: var(--lp-primary);
+  --chart-2: var(--lp-secondary);
+  --chart-3: var(--lp-success);
+  --chart-4: var(--lp-warning);
+  --chart-5: var(--lp-error);
+  --radius: 0.625rem;
+  --sidebar: var(--lp-surface);
+  --sidebar-foreground: var(--lp-text-heading);
+  --sidebar-primary: var(--lp-secondary);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--lp-card);
+  --sidebar-accent-foreground: var(--lp-text-heading);
+  --sidebar-border: var(--lp-border);
+  --sidebar-ring: var(--lp-secondary);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* LaunchPad custom colors for Tailwind */
+  --color-lp-bg: var(--lp-bg);
+  --color-lp-surface: var(--lp-surface);
+  --color-lp-card: var(--lp-card);
+  --color-lp-primary: var(--lp-primary);
+  --color-lp-secondary: var(--lp-secondary);
+  --color-lp-success: var(--lp-success);
+  --color-lp-warning: var(--lp-warning);
+  --color-lp-error: var(--lp-error);
+  --color-lp-heading: var(--lp-text-heading);
+  --color-lp-body: var(--lp-text-body);
+  --color-lp-muted: var(--lp-text-muted);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-lp-bg text-lp-body;
+    font-family: 'Inter', sans-serif;
+  }
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  h1 {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+    color: var(--lp-text-heading);
+  }
+
+  h2 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+    color: var(--lp-text-heading);
+  }
+
+  h3 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+    color: var(--lp-text-heading);
+  }
+
+  h4 {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+    color: var(--lp-text-heading);
+  }
+
+  label {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  button {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  input {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.5;
+  }
+}
+
+/* LaunchPad pulse animation for IN_FLIGHT status */
+@keyframes lp-pulse-blue {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(79, 195, 247, 0.6); }
+  50% { opacity: 0.6; box-shadow: 0 0 16px rgba(79, 195, 247, 0.9); }
+}
+
+@keyframes lp-live-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.lp-pulse-blue {
+  animation: lp-pulse-blue 2s ease-in-out infinite;
+}
+
+.lp-live-dot {
+  animation: lp-live-dot 1s ease-in-out infinite;
+}
+
+/* Skeleton shimmer */
+@keyframes lp-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.lp-skeleton {
+  background: linear-gradient(90deg, var(--lp-card) 25%, rgba(79,195,247,0.05) 50%, var(--lp-card) 75%);
+  background-size: 200% 100%;
+  animation: lp-shimmer 1.8s ease-in-out infinite;
+}
