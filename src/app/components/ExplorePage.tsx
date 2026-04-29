@@ -432,28 +432,6 @@ function ExploreCard({ launch, isSelected, onToggleCompare }: {
 
   return (
     <Link to={`/launch/${launch.id}`} className="no-underline block relative">
-      {onToggleCompare && (
-        <button
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleCompare(launch.id); }}
-          className="absolute top-3 left-3 z-10 w-7 h-7 rounded-full border flex items-center justify-center cursor-pointer transition-all"
-          style={{
-            background: isSelected ? `${DS.primary}30` : `${DS.glass}90`,
-            borderColor: isSelected ? `${DS.primary}60` : DS.border,
-            boxShadow: isSelected ? `0 0 12px ${DS.glowPrimary}` : "none",
-            backdropFilter: "blur(4px)",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = isSelected ? DS.primary : DS.secondary;
-            e.currentTarget.style.boxShadow = isSelected ? `0 0 16px ${DS.glowPrimary}` : `0 0 12px ${DS.glowSecondary}`;
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = isSelected ? `${DS.primary}60` : DS.border;
-            e.currentTarget.style.boxShadow = isSelected ? `0 0 12px ${DS.glowPrimary}` : "none";
-          }}
-        >
-          <GitCompare className="w-3.5 h-3.5" style={{ color: isSelected ? DS.primary : DS.textMuted }} />
-        </button>
-      )}
       <div
         className="group rounded-xl overflow-hidden border transition-all duration-500 h-full"
         style={{
@@ -499,6 +477,28 @@ function ExploreCard({ launch, isSelected, onToggleCompare }: {
           </div>
         </div>
       </div>
+      {onToggleCompare && (
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleCompare(launch.id); }}
+          className="absolute top-3 left-3 z-10 w-7 h-7 rounded-full border flex items-center justify-center cursor-pointer transition-all"
+          style={{
+            background: isSelected ? `${DS.primary}30` : `${DS.glass}90`,
+            borderColor: isSelected ? `${DS.primary}60` : DS.border,
+            boxShadow: isSelected ? `0 0 12px ${DS.glowPrimary}` : "none",
+            backdropFilter: "blur(4px)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = isSelected ? DS.primary : DS.secondary;
+            e.currentTarget.style.boxShadow = isSelected ? `0 0 16px ${DS.glowPrimary}` : `0 0 12px ${DS.glowSecondary}`;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = isSelected ? `${DS.primary}60` : DS.border;
+            e.currentTarget.style.boxShadow = isSelected ? `0 0 12px ${DS.glowPrimary}` : "none";
+          }}
+        >
+          <GitCompare className="w-3.5 h-3.5" style={{ color: isSelected ? DS.primary : DS.textMuted }} />
+        </button>
+      )}
     </Link>
   );
 }
