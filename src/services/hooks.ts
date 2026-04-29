@@ -72,9 +72,64 @@ export function useUpcomingLaunches(
     filters.status,
     filters.limit,
     filters.offset,
+    filters.dateFrom,
+    filters.dateTo,
   ]);
 
   return { data, loading, error, refetch: () => fetchData() };
+}
+
+/* ─── Past Launches Hook ─── */
+export function usePastLaunches(
+  filters: launchService.LaunchFilters = {},
+): FetchState<PaginatedResponse<APILaunch>> {
+  const [data, setData] = useState<PaginatedResponse<APILaunch> | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
+
+  const fetchData = useCallback(async () => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await launchService.getPastLaunches(
+        filtersRef.current,
+        controller.signal,
+      );
+      setData(result);
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, [
+    fetchData,
+    filters.search,
+    filters.agency,
+    filters.rocketName,
+    filters.status,
+    filters.limit,
+    filters.offset,
+    filters.dateFrom,
+    filters.dateTo,
+  ]);
+
+  return { data, loading, error, refetch: fetchData };
 }
 
 /* ─── Single Launch Detail Hook ─── */

@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, useState, useCallback } from "react";
 import { Link } from "react-router";
 import { Rocket, MapPin, ChevronRight, Satellite, Clock } from "lucide-react";
 import { Starfield } from "./Starfield";
@@ -8,6 +8,7 @@ import {
   APIStatusChip, APIAgencyBadge, OrbitTag,
   LiveBadge, Navbar, PageShell, StatPill, SectionLabel, DS,
   apiStatusDotColor, LaunchCardSkeleton, LoadingState, ErrorState,
+  RefreshButton,
 } from "./shared";
 import { useUpcomingLaunches } from "../../services/hooks";
 import { getMissionName, getRocketName, getAgencyName, getAgencyAbbrev, getOrbitAbbrev, getLaunchImage } from "../../services/formatters";
@@ -73,6 +74,7 @@ function SidebarItem({ launch }: { launch: APILaunch }) {
 
 export function HomePage() {
   const { data, loading, error, refetch } = useUpcomingLaunches({ limit: 20 });
+  const [refreshing, setRefreshing] = useState(false);
   const allResults = data?.results ?? [];
 
   // Filter to only show launches that haven't happened yet
@@ -88,6 +90,12 @@ export function HomePage() {
     return diff > 0 && diff < 86400000;
   }).length;
   const agencies = new Set(launches.map(l => l.launch_service_provider.name));
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
 
   if (loading && !data) {
     return (
@@ -190,7 +198,10 @@ export function HomePage() {
           <div className="flex-1">
             <div className="flex items-center justify-between mb-6">
               <SectionLabel>UPCOMING LAUNCHES</SectionLabel>
-              <span className="text-xs" style={{ color: DS.textMuted }}>{totalUpcoming} missions</span>
+              <div className="flex items-center gap-3">
+                <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
+                <span className="text-xs" style={{ color: DS.textMuted }}>{totalUpcoming} missions</span>
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {launches.slice(0, 6).map((l) => (

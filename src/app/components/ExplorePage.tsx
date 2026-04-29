@@ -1,20 +1,27 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router";
 import { Rocket, MapPin, ChevronRight, ChevronDown, Calendar, ArrowUpDown } from "lucide-react";
 import {
   useCountdown, CountdownInline, APIStatusChip, APIAgencyBadge, OrbitTag, FilterChip, SearchBar,
   Navbar, PageShell, EmptyState, SectionLabel, ButtonSecondary, ButtonGhost, DS,
-  LoadingState, ErrorState, LaunchCardSkeleton,
+  LoadingState, ErrorState, LaunchCardSkeleton, RefreshButton,
+  TabBar, ViewToggle, DatePresetBar, getDatePreset,
+  type ViewMode,
 } from "./shared";
 import { Starfield } from "./Starfield";
 import { motion } from "motion/react";
-import { useUpcomingLaunches, useAgencies } from "../../services/hooks";
+import { useUpcomingLaunches, usePastLaunches, useAgencies } from "../../services/hooks";
 import { getMissionName, getRocketName, getAgencyName, getOrbitAbbrev, getLaunchImage, getAgencyColor, formatLaunchDate, formatLaunchTime } from "../../services/formatters";
 import type { APILaunch } from "../../services/types";
+import { PatchCard } from "./PatchCard";
+import { CalendarGrid } from "./CalendarGrid";
 
 type SortMode = "date" | "agency" | "status";
+type LaunchTab = "upcoming" | "past";
 
 export function ExplorePage() {
+  const [launchTab, setLaunchTab] = useState<LaunchTab>("upcoming");
+  const [viewMode, setViewMode] = useState<ViewMode>("cards");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
@@ -23,6 +30,7 @@ export function ExplorePage() {
   const [sortMode, setSortMode] = useState<SortMode>("date");
   const [visibleCount, setVisibleCount] = useState(6);
   const [rocketDropdownOpen, setRocketDropdownOpen] = useState(false);
+  const [datePreset, setDatePreset] = useState("12m");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Debounce search to avoid excessive API calls
@@ -40,21 +48,45 @@ export function ExplorePage() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Fetch data from API with filters
-  const { data, loading, error, refetch } = useUpcomingLaunches({
+  const dateRange = useMemo(() => getDatePreset(datePreset), [datePreset]);
+
+  // Fetch upcoming data
+  const upcomingQuery = useUpcomingLaunches({
     search: debouncedSearch || undefined,
     agency: selectedAgency || undefined,
     limit: 40,
   });
 
-  // Fetch agencies for filter chips
-  const { data: agencies } = useAgencies();
+  // Fetch past data with date range
+  const pastQuery = usePastLaunches({
+    search: debouncedSearch || undefined,
+    agency: selectedAgency || undefined,
+    limit: 40,
+    dateFrom: dateRange?.dateFrom,
+    dateTo: dateRange?.dateTo,
+  });
 
-  // Filter to only future launches
+  const activeQuery = launchTab === "upcoming" ? upcomingQuery : pastQuery;
+  const { data, loading, error, refetch } = activeQuery;
+
+  // Fetch agencies for filter chips
+  const { data: agencies, refetch: refetchAgencies } = useAgencies();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([refetch(), refetchAgencies()]);
+    setRefreshing(false);
+  }, [refetch, refetchAgencies]);
+
   const launches = useMemo(() => {
-    const now = Date.now();
-    return (data?.results ?? []).filter(l => new Date(l.net).getTime() > now);
-  }, [data]);
+    const results = data?.results ?? [];
+    if (launchTab === "upcoming") {
+      const now = Date.now();
+      return results.filter((l) => new Date(l.net).getTime() > now);
+    }
+    return results;
+  }, [data, launchTab]);
 
   // Client-side filtering for rocket family (API doesn't support exact rocket config filter well)
   const filtered = useMemo(() => {
@@ -180,9 +212,27 @@ export function ExplorePage() {
 
       <div className="relative z-10 max-w-[1440px] mx-auto px-6 pt-10 pb-20">
         {/* Header */}
-        <div className="mb-10">
-          <h1 className="text-3xl md:text-4xl tracking-wide mb-2" style={{ fontFamily: DS.fontHeading, color: DS.textHeading }}>Explore Launches</h1>
-          <p className="text-sm" style={{ color: DS.textMuted }}>Discover missions from agencies worldwide</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl md:text-4xl tracking-wide mb-2" style={{ fontFamily: DS.fontHeading, color: DS.textHeading }}>Explore Launches</h1>
+            <p className="text-sm" style={{ color: DS.textMuted }}>Discover missions from agencies worldwide</p>
+          </div>
+          <ViewToggle mode={viewMode} onChange={setViewMode} />
+        </div>
+
+        {/* Tabs */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <TabBar
+            tabs={[
+              { key: "upcoming" as const, label: "Upcoming" },
+              { key: "past" as const, label: "Past" },
+            ]}
+            active={launchTab}
+            onChange={(tab) => { setLaunchTab(tab); setVisibleCount(6); }}
+          />
+          {launchTab === "past" && (
+            <DatePresetBar active={datePreset} onChange={(key) => { setDatePreset(key); setVisibleCount(6); }} />
+          )}
         </div>
 
         {/* Search */}
@@ -256,35 +306,55 @@ export function ExplorePage() {
           </FilterRow>
         </div>
 
-        {/* Sort bar */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <span className="text-xs" style={{ color: DS.textMuted }}>{filtered.length} results</span>
-            {hasFilters && <ButtonGhost onClick={clearAll}>Clear all filters</ButtonGhost>}
+        {/* Sort bar — only for cards and patches views */}
+        {viewMode !== "calendar" && (
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
+              <span className="text-xs" style={{ color: DS.textMuted }}>{filtered.length} results</span>
+              {hasFilters && <ButtonGhost onClick={clearAll}>Clear all filters</ButtonGhost>}
+            </div>
+            <div className="flex items-center gap-1">
+              <ArrowUpDown className="w-3 h-3" style={{ color: DS.textMuted }} />
+              <span className="text-[10px] tracking-wider mr-2" style={{ fontFamily: DS.fontHeading, color: DS.textMuted }}>SORT</span>
+              {(["date", "agency", "status"] as SortMode[]).map(mode => (
+                <button
+                  key={mode}
+                  onClick={() => setSortMode(mode)}
+                  className="px-3 py-1 rounded-full text-[11px] transition-all border cursor-pointer"
+                  style={{
+                    background: sortMode === mode ? `${DS.secondary}15` : "transparent",
+                    borderColor: sortMode === mode ? `${DS.secondary}40` : "transparent",
+                    color: sortMode === mode ? DS.secondary : DS.textMuted,
+                  }}
+                >
+                  {mode === "date" ? (launchTab === "past" ? "Newest" : "Soonest") : mode.charAt(0).toUpperCase() + mode.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <ArrowUpDown className="w-3 h-3" style={{ color: DS.textMuted }} />
-            <span className="text-[10px] tracking-wider mr-2" style={{ fontFamily: DS.fontHeading, color: DS.textMuted }}>SORT</span>
-            {(["date", "agency", "status"] as SortMode[]).map(mode => (
-              <button
-                key={mode}
-                onClick={() => setSortMode(mode)}
-                className="px-3 py-1 rounded-full text-[11px] transition-all border cursor-pointer"
-                style={{
-                  background: sortMode === mode ? `${DS.secondary}15` : "transparent",
-                  borderColor: sortMode === mode ? `${DS.secondary}40` : "transparent",
-                  color: sortMode === mode ? DS.secondary : DS.textMuted,
-                }}
-              >
-                {mode === "date" ? "Soonest" : mode.charAt(0).toUpperCase() + mode.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
+        )}
 
-        {/* Grid or Empty */}
-        {visible.length === 0 ? (
+        {/* Content */}
+        {viewMode === "calendar" ? (
+          <CalendarGrid launches={filtered} />
+        ) : visible.length === 0 ? (
           <EmptyState onReset={clearAll} />
+        ) : viewMode === "patches" ? (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+              {visible.map((l, i) => (
+                <motion.div key={l.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }}>
+                  <PatchCard launch={l} />
+                </motion.div>
+              ))}
+            </div>
+            {hasMore && (
+              <div className="flex justify-center mt-10">
+                <ButtonSecondary onClick={() => setVisibleCount(c => c + 6)}>LOAD MORE</ButtonSecondary>
+              </div>
+            )}
+          </>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">

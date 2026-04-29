@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
-import { Search, Menu, X, Telescope } from "lucide-react";
+import { Search, Menu, X, Telescope, RotateCw, LayoutGrid, Shield, CalendarDays } from "lucide-react";
 import type { Status } from "./launchData";
 import { STATUS_LABELS, STATUS_DOT_COLORS, AGENCY_COLORS } from "./launchData";
 import type { APIStatus, APIAgency } from "../../services/types";
@@ -311,6 +311,130 @@ export function ButtonGhost({ children, onClick, className = "" }: { children: R
   );
 }
 
+/* ─── Tab Bar ─── */
+export function TabBar<T extends string>({
+  tabs,
+  active,
+  onChange,
+}: {
+  tabs: { key: T; label: string }[];
+  active: T;
+  onChange: (key: T) => void;
+}) {
+  return (
+    <div
+      className="flex gap-1 p-1 rounded-xl border w-fit"
+      style={{ borderColor: DS.border, background: DS.glass }}
+    >
+      {tabs.map((tab) => (
+        <button
+          key={tab.key}
+          onClick={() => onChange(tab.key)}
+          className="px-4 py-2 rounded-lg text-xs tracking-wider transition-all duration-300 cursor-pointer"
+          style={{
+            fontFamily: DS.fontHeading,
+            background: active === tab.key ? `${DS.secondary}20` : "transparent",
+            color: active === tab.key ? DS.secondary : DS.textMuted,
+            border: active === tab.key ? `1px solid ${DS.secondary}40` : "1px solid transparent",
+          }}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ─── View Toggle (Cards | Patches | Calendar) ─── */
+export type ViewMode = "cards" | "patches" | "calendar";
+
+export function ViewToggle({
+  mode,
+  onChange,
+}: {
+  mode: ViewMode;
+  onChange: (mode: ViewMode) => void;
+}) {
+  const modes: { key: ViewMode; label: string; icon: ReactNode }[] = [
+    { key: "cards", label: "Cards", icon: <LayoutGrid className="w-3 h-3" /> },
+    { key: "patches", label: "Patches", icon: <Shield className="w-3 h-3" /> },
+    { key: "calendar", label: "Calendar", icon: <CalendarDays className="w-3 h-3" /> },
+  ];
+
+  return (
+    <div className="flex gap-1 p-1 rounded-lg border" style={{ borderColor: DS.border, background: DS.glass }}>
+      {modes.map((m) => (
+        <button
+          key={m.key}
+          onClick={() => onChange(m.key)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] tracking-wider transition-all cursor-pointer"
+          style={{
+            fontFamily: DS.fontHeading,
+            background: mode === m.key ? `${DS.primary}15` : "transparent",
+            color: mode === m.key ? DS.primary : DS.textMuted,
+          }}
+        >
+          {m.icon}
+          {m.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Date Preset Bar (for past launches) ─── */
+const DATE_PRESETS = [
+  { key: "30d", label: "30 Days", days: 30 },
+  { key: "6m", label: "6 Months", days: 180 },
+  { key: "12m", label: "12 Months", days: 365 },
+];
+
+export interface DatePreset {
+  key: string;
+  dateFrom: string;
+  dateTo: string;
+}
+
+export function getDatePreset(key: string): DatePreset | null {
+  const preset = DATE_PRESETS.find((p) => p.key === key);
+  if (!preset) return null;
+  const now = new Date();
+  const from = new Date(now.getTime() - preset.days * 86400000);
+  return {
+    key: preset.key,
+    dateFrom: from.toISOString().split("T")[0],
+    dateTo: now.toISOString().split("T")[0],
+  };
+}
+
+export function DatePresetBar({
+  active,
+  onChange,
+}: {
+  active: string;
+  onChange: (key: string) => void;
+}) {
+  return (
+    <div className="flex gap-2">
+      {DATE_PRESETS.map((preset) => (
+        <button
+          key={preset.key}
+          onClick={() => onChange(preset.key)}
+          className="px-3 py-1.5 rounded-full text-[10px] tracking-wider border transition-all cursor-pointer"
+          style={{
+            fontFamily: DS.fontHeading,
+            background: active === preset.key ? `${DS.secondary}15` : "transparent",
+            borderColor: active === preset.key ? `${DS.secondary}40` : DS.border,
+            color: active === preset.key ? DS.secondary : DS.textMuted,
+          }}
+        >
+          {preset.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /* ─── Launch Card Skeleton ─── */
 export function LaunchCardSkeleton() {
   return (
@@ -543,6 +667,30 @@ export function LoadingState({ message = "Loading launch data..." }: { message?:
       </div>
       <p className="text-sm" style={{ fontFamily: DS.fontHeading, color: DS.textMuted, letterSpacing: "0.1em" }}>{message}</p>
     </div>
+  );
+}
+
+/** Refresh button — triggers client-side data re-fetch */
+export function RefreshButton({ onClick, refreshing }: { onClick: () => void; refreshing?: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={refreshing}
+      className="px-4 py-2 rounded-full text-xs transition-all duration-300 border cursor-pointer flex items-center gap-2"
+      style={{
+        fontFamily: DS.fontHeading,
+        letterSpacing: "0.1em",
+        background: "transparent",
+        borderColor: `${DS.secondary}40`,
+        color: DS.secondary,
+        opacity: refreshing ? 0.6 : 1,
+      }}
+      onMouseEnter={e => { e.currentTarget.style.background = `${DS.secondary}12`; e.currentTarget.style.boxShadow = `0 0 20px ${DS.glowSecondary}`; }}
+      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.boxShadow = "none"; }}
+    >
+      <RotateCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+      {refreshing ? "REFRESHING" : "REFRESH"}
+    </button>
   );
 }
 
