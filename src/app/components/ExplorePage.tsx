@@ -6,7 +6,7 @@ import {
   Navbar, PageShell, EmptyState, SectionLabel, ButtonSecondary, ButtonGhost, DS,
   LoadingState, ErrorState, LaunchCardSkeleton, RefreshButton,
   TabBar, ViewToggle, DatePresetBar, getDatePreset,
-  type ViewMode, CompareDock,
+  type ViewMode, CompareDock, FavoriteStar,
 } from "./shared";
 import { Starfield } from "./Starfield";
 import { motion } from "motion/react";
@@ -16,9 +16,10 @@ import type { APILaunch } from "../../services/types";
 import { PatchCard } from "./PatchCard";
 import { CalendarGrid } from "./CalendarGrid";
 import { CompareModal } from "./CompareModal";
+import { toggleFavorite, isFavorited, getFavorites } from "../../services/favorites";
 
 type SortMode = "date" | "agency" | "status";
-type LaunchTab = "upcoming" | "past";
+type LaunchTab = "upcoming" | "past" | "favorites";
 
 export function ExplorePage() {
   const [launchTab, setLaunchTab] = useState<LaunchTab>("upcoming");
@@ -75,6 +76,7 @@ export function ExplorePage() {
   // Fetch agencies for filter chips
   const { data: agencies, refetch: refetchAgencies } = useAgencies();
   const [refreshing, setRefreshing] = useState(false);
+  const [favVersion, setFavVersion] = useState(0);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -88,8 +90,12 @@ export function ExplorePage() {
       const now = Date.now();
       return results.filter((l) => new Date(l.net).getTime() > now);
     }
+    if (launchTab === "favorites") {
+      const favIds = getFavorites();
+      return results.filter((l) => favIds.has(l.id));
+    }
     return results;
-  }, [data, launchTab]);
+  }, [data, launchTab, favVersion]);
 
   // Client-side filtering for rocket family (API doesn't support exact rocket config filter well)
   const filtered = useMemo(() => {
@@ -186,6 +192,11 @@ export function ExplorePage() {
     );
   };
 
+  const handleFavToggle = (id: string) => {
+    toggleFavorite(id);
+    setFavVersion((v) => v + 1);
+  };
+
   const comparedLaunches = useMemo(
     () => launches.filter((l) => compareIds.includes(l.id)),
     [launches, compareIds],
@@ -244,6 +255,7 @@ export function ExplorePage() {
             tabs={[
               { key: "upcoming" as const, label: "Upcoming" },
               { key: "past" as const, label: "Past" },
+              { key: "favorites" as const, label: "My Launches" },
             ]}
             active={launchTab}
             onChange={(tab) => { setLaunchTab(tab); setVisibleCount(6); }}
@@ -378,7 +390,7 @@ export function ExplorePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {visible.map((l, i) => (
                 <motion.div key={l.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }}>
-                  <ExploreCard launch={l} isSelected={compareIds.includes(l.id)} onToggleCompare={toggleCompare} />
+                  <ExploreCard launch={l} isSelected={compareIds.includes(l.id)} onToggleCompare={toggleCompare} onToggleFav={handleFavToggle} isFav={isFavorited(l.id)} />
                 </motion.div>
               ))}
             </div>
@@ -417,10 +429,12 @@ function FilterRow({ label, children }: { label: string; children: React.ReactNo
   );
 }
 
-function ExploreCard({ launch, isSelected, onToggleCompare }: {
+function ExploreCard({ launch, isSelected, onToggleCompare, onToggleFav, isFav }: {
   launch: APILaunch;
   isSelected?: boolean;
   onToggleCompare?: (id: string) => void;
+  onToggleFav?: (id: string) => void;
+  isFav?: boolean;
 }) {
   const missionName = getMissionName(launch);
   const rocketName = getRocketName(launch);
@@ -456,7 +470,12 @@ function ExploreCard({ launch, isSelected, onToggleCompare }: {
         <div className="relative h-40 overflow-hidden">
           <img src={image} alt={rocketName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
           <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${DS.bg}, transparent)` }} />
-          <div className="absolute top-3 right-3"><APIStatusChip status={launch.status} /></div>
+          <div className="absolute top-3 right-3 z-10"><APIStatusChip status={launch.status} /></div>
+          {onToggleFav && (
+            <div className="absolute top-3 right-14 z-10">
+              <FavoriteStar favorited={!!isFav} onClick={() => onToggleFav(launch.id)} />
+            </div>
+          )}
           <div className="absolute bottom-3 left-3"><OrbitTag orbit={orbit} /></div>
         </div>
         <div className="p-4 space-y-3">

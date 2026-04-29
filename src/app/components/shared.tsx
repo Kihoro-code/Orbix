@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
-import { Search, Menu, X, Telescope, RotateCw, LayoutGrid, Shield, CalendarDays, GitCompare } from "lucide-react";
+import { Search, Menu, X, Telescope, RotateCw, LayoutGrid, Shield, CalendarDays, GitCompare, Star } from "lucide-react";
 import type { Status } from "./launchData";
 import { STATUS_LABELS, STATUS_DOT_COLORS, AGENCY_COLORS } from "./launchData";
 import type { APIStatus, APIAgency, APILaunch } from "../../services/types";
@@ -435,6 +435,41 @@ export function DatePresetBar({
   );
 }
 
+/* ─── Favorite Star ─── */
+export function FavoriteStar({
+  favorited,
+  onClick,
+  size = "sm",
+}: {
+  favorited: boolean;
+  onClick: () => void;
+  size?: "sm" | "md";
+}) {
+  const dim = size === "md" ? "w-8 h-8" : "w-7 h-7";
+  return (
+    <button
+      onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClick(); }}
+      className={`${dim} rounded-full border flex items-center justify-center cursor-pointer transition-all`}
+      style={{
+        background: favorited ? `${DS.primary}20` : `${DS.glass}90`,
+        borderColor: favorited ? `${DS.primary}60` : DS.border,
+        boxShadow: favorited ? `0 0 12px ${DS.glowPrimary}` : "none",
+        backdropFilter: "blur(4px)",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = favorited ? DS.primary : DS.secondary;
+        e.currentTarget.style.boxShadow = favorited ? `0 0 16px ${DS.glowPrimary}` : `0 0 12px ${DS.glowSecondary}`;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = favorited ? `${DS.primary}60` : DS.border;
+        e.currentTarget.style.boxShadow = favorited ? `0 0 12px ${DS.glowPrimary}` : "none";
+      }}
+    >
+      <Star className="w-3.5 h-3.5" style={{ color: favorited ? DS.primary : DS.textMuted, fill: favorited ? DS.primary : "none" }} />
+    </button>
+  );
+}
+
 /* ─── Compare Dock ─── */
 export function CompareDock({
   selected,
@@ -577,6 +612,7 @@ export function Navbar() {
   const location = useLocation();
   const isHome = location.pathname === "/";
   const isExplore = location.pathname === "/explore";
+  const isLive = location.pathname === "/live";
 
   return (
     <nav className="sticky top-0 z-50 border-b" style={{ borderColor: DS.border, background: "rgba(10,10,15,0.85)", backdropFilter: "blur(20px)" }}>
@@ -602,6 +638,7 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-8">
           <NavLink to="/" active={isHome}>HOME</NavLink>
           <NavLink to="/explore" active={isExplore}>EXPLORE</NavLink>
+          <NavLink to="/live" active={isLive}>LIVE</NavLink>
         </div>
 
         <div className="flex items-center gap-3">
@@ -630,6 +667,7 @@ export function Navbar() {
         <div className="md:hidden border-t px-6 py-4 space-y-3" style={{ borderColor: DS.border, background: "rgba(10,10,15,0.95)" }}>
           <Link to="/" className="block py-2 text-sm tracking-wider no-underline" style={{ fontFamily: DS.fontHeading, fontSize: 11, color: isHome ? DS.textHeading : DS.textMuted }} onClick={() => setMobileOpen(false)}>HOME</Link>
           <Link to="/explore" className="block py-2 text-sm tracking-wider no-underline" style={{ fontFamily: DS.fontHeading, fontSize: 11, color: isExplore ? DS.textHeading : DS.textMuted }} onClick={() => setMobileOpen(false)}>EXPLORE</Link>
+          <Link to="/live" className="block py-2 text-sm tracking-wider no-underline" style={{ fontFamily: DS.fontHeading, fontSize: 11, color: isLive ? DS.textHeading : DS.textMuted }} onClick={() => setMobileOpen(false)}>LIVE</Link>
         </div>
       )}
     </nav>

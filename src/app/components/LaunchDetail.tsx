@@ -131,6 +131,47 @@ export function LaunchDetail() {
         <section className="flex flex-col lg:flex-row gap-8 mb-16">
           {/* Left Column */}
           <div className="lg:w-[60%] space-y-8">
+            {/* Livestream Embed */}
+            {launch.vidURLs && launch.vidURLs.length > 0 && (
+              <GlassCard title={launch.webcast_live ? "WATCH LIVE" : "LIVESTREAM"}>
+                {(() => {
+                  const liveVid = launch.vidURLs.find(
+                    (v) => v.url.includes("youtube.com") || v.url.includes("youtu.be")
+                  ) ?? launch.vidURLs[0];
+
+                  let embedUrl = "";
+                  if (liveVid.url.includes("youtube.com/watch?v=")) {
+                    const id = new URL(liveVid.url).searchParams.get("v");
+                    if (id) embedUrl = `https://www.youtube.com/embed/${id}?autoplay=0&rel=0`;
+                  } else if (liveVid.url.includes("youtu.be/")) {
+                    const id = liveVid.url.split("youtu.be/")[1]?.split("?")[0];
+                    if (id) embedUrl = `https://www.youtube.com/embed/${id}?autoplay=0&rel=0`;
+                  }
+
+                  if (!embedUrl) return null;
+
+                  return (
+                    <div className="space-y-3">
+                      <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
+                        <iframe
+                          src={embedUrl}
+                          title={liveVid.title}
+                          className="absolute inset-0 w-full h-full rounded-lg border"
+                          style={{ borderColor: DS.border }}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {launch.webcast_live && <LiveBadge />}
+                        <span className="text-xs" style={{ color: DS.textBody }}>{liveVid.title}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </GlassCard>
+            )}
+
             <GlassCard title="MISSION OVERVIEW">
               <p className="text-sm leading-relaxed mb-6" style={{ color: DS.textBody }}>{description}</p>
               <div className="flex items-center gap-2 mb-4">
