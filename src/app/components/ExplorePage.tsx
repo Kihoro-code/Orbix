@@ -1,12 +1,12 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router";
-import { Rocket, MapPin, ChevronRight, ChevronDown, Calendar, ArrowUpDown } from "lucide-react";
+import { Rocket, MapPin, ChevronRight, ChevronDown, Calendar, ArrowUpDown, GitCompare } from "lucide-react";
 import {
   useCountdown, CountdownInline, APIStatusChip, APIAgencyBadge, OrbitTag, FilterChip, SearchBar,
   Navbar, PageShell, EmptyState, SectionLabel, ButtonSecondary, ButtonGhost, DS,
   LoadingState, ErrorState, LaunchCardSkeleton, RefreshButton,
   TabBar, ViewToggle, DatePresetBar, getDatePreset,
-  type ViewMode,
+  type ViewMode, CompareDock,
 } from "./shared";
 import { Starfield } from "./Starfield";
 import { motion } from "motion/react";
@@ -15,6 +15,7 @@ import { getMissionName, getRocketName, getAgencyName, getOrbitAbbrev, getLaunch
 import type { APILaunch } from "../../services/types";
 import { PatchCard } from "./PatchCard";
 import { CalendarGrid } from "./CalendarGrid";
+import { CompareModal } from "./CompareModal";
 
 type SortMode = "date" | "agency" | "status";
 type LaunchTab = "upcoming" | "past";
@@ -31,6 +32,8 @@ export function ExplorePage() {
   const [visibleCount, setVisibleCount] = useState(6);
   const [rocketDropdownOpen, setRocketDropdownOpen] = useState(false);
   const [datePreset, setDatePreset] = useState("12m");
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [showCompareModal, setShowCompareModal] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Debounce search to avoid excessive API calls
@@ -176,6 +179,21 @@ export function ExplorePage() {
     setVisibleCount(6);
   };
   const hasFilters = search || selectedAgency || selectedRocket;
+
+  const toggleCompare = (id: string) => {
+    setCompareIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : prev.length < 2 ? [...prev, id] : prev
+    );
+  };
+
+  const comparedLaunches = useMemo(
+    () => launches.filter((l) => compareIds.includes(l.id)),
+    [launches, compareIds],
+  );
+
+  const handleCompare = () => {
+    if (comparedLaunches.length === 2) setShowCompareModal(true);
+  };
 
   if (loading && !data) {
     return (
@@ -360,7 +378,7 @@ export function ExplorePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
               {visible.map((l, i) => (
                 <motion.div key={l.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }}>
-                  <ExploreCard launch={l} />
+                  <ExploreCard launch={l} isSelected={compareIds.includes(l.id)} onToggleCompare={toggleCompare} />
                 </motion.div>
               ))}
             </div>
@@ -372,6 +390,20 @@ export function ExplorePage() {
           </>
         )}
       </div>
+
+      <CompareDock
+        selected={comparedLaunches}
+        onCompare={handleCompare}
+        onRemove={(id) => setCompareIds((prev) => prev.filter((x) => x !== id))}
+        maxCount={2}
+      />
+
+      {showCompareModal && comparedLaunches.length === 2 && (
+        <CompareModal
+          launches={comparedLaunches as [APILaunch, APILaunch]}
+          onClose={() => setShowCompareModal(false)}
+        />
+      )}
     </PageShell>
   );
 }
@@ -385,7 +417,11 @@ function FilterRow({ label, children }: { label: string; children: React.ReactNo
   );
 }
 
-function ExploreCard({ launch }: { launch: APILaunch }) {
+function ExploreCard({ launch, isSelected, onToggleCompare }: {
+  launch: APILaunch;
+  isSelected?: boolean;
+  onToggleCompare?: (id: string) => void;
+}) {
   const missionName = getMissionName(launch);
   const rocketName = getRocketName(launch);
   const orbit = getOrbitAbbrev(launch);
@@ -395,12 +431,49 @@ function ExploreCard({ launch }: { launch: APILaunch }) {
   const timeStr = formatLaunchTime(launch.net);
 
   return (
-    <Link to={`/launch/${launch.id}`} className="no-underline block">
+    <Link to={`/launch/${launch.id}`} className="no-underline block relative">
+      {onToggleCompare && (
+        <button
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleCompare(launch.id); }}
+          className="absolute top-3 left-3 z-10 w-7 h-7 rounded-full border flex items-center justify-center cursor-pointer transition-all"
+          style={{
+            background: isSelected ? `${DS.primary}30` : `${DS.glass}90`,
+            borderColor: isSelected ? `${DS.primary}60` : DS.border,
+            boxShadow: isSelected ? `0 0 12px ${DS.glowPrimary}` : "none",
+            backdropFilter: "blur(4px)",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = isSelected ? DS.primary : DS.secondary;
+            e.currentTarget.style.boxShadow = isSelected ? `0 0 16px ${DS.glowPrimary}` : `0 0 12px ${DS.glowSecondary}`;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = isSelected ? `${DS.primary}60` : DS.border;
+            e.currentTarget.style.boxShadow = isSelected ? `0 0 12px ${DS.glowPrimary}` : "none";
+          }}
+        >
+          <GitCompare className="w-3.5 h-3.5" style={{ color: isSelected ? DS.primary : DS.textMuted }} />
+        </button>
+      )}
       <div
         className="group rounded-xl overflow-hidden border transition-all duration-500 h-full"
-        style={{ background: DS.cardGradient, borderColor: DS.border, backdropFilter: "blur(10px)" }}
-        onMouseEnter={e => { e.currentTarget.style.borderColor = DS.borderHover; e.currentTarget.style.boxShadow = `0 0 30px ${DS.glowSecondary}`; }}
-        onMouseLeave={e => { e.currentTarget.style.borderColor = DS.border; e.currentTarget.style.boxShadow = "none"; }}
+        style={{
+          background: DS.cardGradient,
+          borderColor: isSelected ? `${DS.primary}40` : DS.border,
+          backdropFilter: "blur(10px)",
+          boxShadow: isSelected ? `0 0 20px ${DS.glowPrimary}` : "none",
+        }}
+        onMouseEnter={e => {
+          if (!isSelected) {
+            e.currentTarget.style.borderColor = DS.borderHover;
+            e.currentTarget.style.boxShadow = `0 0 30px ${DS.glowSecondary}`;
+          }
+        }}
+        onMouseLeave={e => {
+          if (!isSelected) {
+            e.currentTarget.style.borderColor = DS.border;
+            e.currentTarget.style.boxShadow = "none";
+          }
+        }}
       >
         <div className="relative h-40 overflow-hidden">
           <img src={image} alt={rocketName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />

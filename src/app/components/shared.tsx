@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
-import { Search, Menu, X, Telescope, RotateCw, LayoutGrid, Shield, CalendarDays } from "lucide-react";
+import { Search, Menu, X, Telescope, RotateCw, LayoutGrid, Shield, CalendarDays, GitCompare } from "lucide-react";
 import type { Status } from "./launchData";
 import { STATUS_LABELS, STATUS_DOT_COLORS, AGENCY_COLORS } from "./launchData";
-import type { APIStatus, APIAgency } from "../../services/types";
+import type { APIStatus, APIAgency, APILaunch } from "../../services/types";
 import { getStatusConfig, getAgencyAbbrev, getAgencyColor } from "../../services/formatters";
 
 /* ─── Design Tokens (JS mirror of theme.css) ─── */
@@ -431,6 +431,66 @@ export function DatePresetBar({
           {preset.label}
         </button>
       ))}
+    </div>
+  );
+}
+
+/* ─── Compare Dock ─── */
+export function CompareDock({
+  selected,
+  onCompare,
+  onRemove,
+  maxCount,
+}: {
+  selected: APILaunch[];
+  onCompare: () => void;
+  onRemove: (id: string) => void;
+  maxCount: number;
+}) {
+  if (selected.length === 0) return null;
+
+  return (
+    <div
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-3 rounded-2xl border shadow-2xl"
+      style={{
+        background: `${DS.surface}F0`,
+        borderColor: `${DS.secondary}30`,
+        backdropFilter: "blur(20px)",
+        boxShadow: `0 0 40px ${DS.glowSecondary}`,
+      }}
+    >
+      <div className="flex items-center gap-3">
+        {selected.map((l) => (
+          <div key={l.id} className="flex items-center gap-2 rounded-lg border px-3 py-1.5"
+            style={{ borderColor: DS.border, background: DS.cardGradient }}>
+            <span className="text-xs truncate max-w-32" style={{ color: DS.textHeading }}>
+              {l.mission?.name ?? l.name.split("|").pop()?.trim() ?? l.name}
+            </span>
+            <button
+              onClick={() => onRemove(l.id)}
+              className="w-5 h-5 rounded-full flex items-center justify-center cursor-pointer transition-colors"
+              style={{ background: `${DS.error}20`, color: DS.error }}
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={onCompare}
+        disabled={selected.length < 2}
+        className="px-4 py-2 rounded-full text-xs tracking-wider transition-all border cursor-pointer flex items-center gap-2"
+        style={{
+          fontFamily: DS.fontHeading,
+          background: selected.length >= 2 ? `${DS.primary}20` : DS.glass,
+          borderColor: selected.length >= 2 ? `${DS.primary}60` : DS.border,
+          color: selected.length >= 2 ? DS.primary : DS.textMuted,
+          opacity: selected.length >= 2 ? 1 : 0.5,
+        }}
+      >
+        <GitCompare className="w-3.5 h-3.5" />
+        COMPARE ({selected.length}/{maxCount})
+      </button>
     </div>
   );
 }

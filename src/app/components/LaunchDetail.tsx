@@ -14,6 +14,7 @@ import {
   formatLength, formatThrust, formatMass, formatCapacity,
 } from "../../services/formatters";
 import type { APILaunch } from "../../services/types";
+import { RocketDiagram } from "./RocketDiagram";
 
 export function LaunchDetail() {
   const { id } = useParams();
@@ -257,6 +258,13 @@ export function LaunchDetail() {
                 </div>
               )}
             </GlassCard>
+
+            {/* Rocket scale diagram */}
+            {rocketConfig.length && rocketConfig.length > 0 && (
+              <GlassCard title="SCALE DIAGRAM">
+                <RocketDiagram launches={[launch]} />
+              </GlassCard>
+            )}
 
             {/* Booster info */}
             {launch.rocket.launcher_stage && launch.rocket.launcher_stage.length > 0 && (
