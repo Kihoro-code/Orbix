@@ -11,7 +11,7 @@ import { useLaunchDetail, useUpcomingLaunches } from "../../services/hooks";
 import {
   getMissionName, getRocketName, getAgencyName, getOrbitAbbrev, getOrbitName,
   getLaunchImage, getWeatherStatus, formatWindowTime, formatTimelineTime,
-  formatLength, formatThrust, formatMass, formatCapacity,
+  formatLength, formatThrust, formatMass, formatCapacity, LAUNCH_FALLBACK_IMAGE,
 } from "../../services/formatters";
 import type { APILaunch } from "../../services/types";
 import { RocketDiagram } from "./RocketDiagram";
@@ -103,7 +103,7 @@ export function LaunchDetail() {
         {/* Hero Banner */}
         <section className="relative rounded-2xl overflow-hidden border mb-10" style={{ borderColor: DS.border }}>
           <div className="absolute inset-0">
-            <img src={image} alt={rocketName} className="w-full h-full object-cover opacity-30" />
+            <img src={image} alt={rocketName} className="w-full h-full object-cover opacity-30" onError={(e) => { (e.target as HTMLImageElement).src = LAUNCH_FALLBACK_IMAGE; }} />
             <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${DS.bg} 0%, rgba(10,10,15,0.6) 40%, rgba(10,10,15,0.3) 100%)` }} />
           </div>
           <div className="relative z-10 flex flex-col items-center text-center py-14 md:py-24 px-6">
@@ -424,7 +424,7 @@ function RelatedCard({ launch }: { launch: APILaunch }) {
         onMouseLeave={e => { e.currentTarget.style.borderColor = DS.border; e.currentTarget.style.boxShadow = "none"; }}
       >
         <div className="relative h-28 overflow-hidden">
-          <img src={getLaunchImage(launch)} alt={getRocketName(launch)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+          <img src={getLaunchImage(launch)} alt={getRocketName(launch)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onError={(e) => { (e.target as HTMLImageElement).src = LAUNCH_FALLBACK_IMAGE; }} />
           <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${DS.bg}, transparent)` }} />
           <div className="absolute top-2 right-2"><APIStatusChip status={launch.status} /></div>
         </div>

@@ -9,7 +9,7 @@ import {
 import { Starfield } from "./Starfield";
 import { useUpcomingLaunches } from "../../services/hooks";
 import {
-  getMissionName, getRocketName, getAgencyName, getOrbitAbbrev, getLaunchImage,
+  getMissionName, getRocketName, getAgencyName, getOrbitAbbrev, getLaunchImage, LAUNCH_FALLBACK_IMAGE,
 } from "../../services/formatters";
 import type { APILaunch } from "../../services/types";
 
@@ -30,7 +30,7 @@ function LiveLaunchCard({ launch }: { launch: APILaunch }) {
         onMouseLeave={(e) => { e.currentTarget.style.borderColor = launch.status.id === 6 ? `${DS.secondary}60` : DS.border; e.currentTarget.style.boxShadow = "none"; }}
       >
         <div className="relative h-48 overflow-hidden">
-          <img src={image} alt={rocketName} className="w-full h-full object-cover opacity-80" />
+          <img src={image} alt={rocketName} className="w-full h-full object-cover opacity-80" onError={(e) => { (e.target as HTMLImageElement).src = LAUNCH_FALLBACK_IMAGE; }} />
           <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${DS.bg} 0%, transparent 50%)` }} />
           <div className="absolute top-3 right-3 flex items-center gap-2">
             <APIStatusChip status={launch.status} />

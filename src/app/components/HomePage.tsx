@@ -11,7 +11,7 @@ import {
   RefreshButton,
 } from "./shared";
 import { useUpcomingLaunches } from "../../services/hooks";
-import { getMissionName, getRocketName, getAgencyName, getAgencyAbbrev, getOrbitAbbrev, getLaunchImage } from "../../services/formatters";
+import { getMissionName, getRocketName, getAgencyName, getAgencyAbbrev, getOrbitAbbrev, getLaunchImage, LAUNCH_FALLBACK_IMAGE } from "../../services/formatters";
 import type { APILaunch } from "../../services/types";
 
 function LaunchCard({ launch }: { launch: APILaunch }) {
@@ -31,7 +31,7 @@ function LaunchCard({ launch }: { launch: APILaunch }) {
         onMouseLeave={e => { e.currentTarget.style.borderColor = DS.border; e.currentTarget.style.boxShadow = "none"; }}
       >
         <div className="relative h-40 overflow-hidden">
-          <img src={image} alt={rocketName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+          <img src={image} alt={rocketName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onError={(e) => { (e.target as HTMLImageElement).src = LAUNCH_FALLBACK_IMAGE; }} />
           <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${DS.bg}, transparent)` }} />
           <div className="absolute top-3 right-3"><APIStatusChip status={launch.status} /></div>
           <div className="absolute bottom-3 left-3"><OrbitTag orbit={orbit} /></div>
@@ -143,7 +143,7 @@ export function HomePage() {
               onMouseLeave={e => (e.currentTarget.style.borderColor = DS.border)}
             >
               <div className="absolute inset-0">
-                <img src={getLaunchImage(featuredLaunch)} alt="Launch" className="w-full h-full object-cover opacity-20" />
+                <img src={getLaunchImage(featuredLaunch)} alt="Launch" className="w-full h-full object-cover opacity-20" onError={(e) => { (e.target as HTMLImageElement).src = LAUNCH_FALLBACK_IMAGE; }} />
                 <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at center, transparent 0%, ${DS.bg} 70%)` }} />
               </div>
               <div className="relative z-10 flex flex-col items-center text-center py-12 md:py-20 px-6">

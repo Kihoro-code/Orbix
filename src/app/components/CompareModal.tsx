@@ -5,7 +5,7 @@ import {
 } from "./shared";
 import {
   getMissionName, getRocketName, getAgencyName, getOrbitAbbrev,
-  getLaunchImage, formatLaunchDate, formatLaunchTime,
+  getLaunchImage, formatLaunchDate, formatLaunchTime, LAUNCH_FALLBACK_IMAGE,
 } from "../../services/formatters";
 import { RocketDiagram } from "./RocketDiagram";
 
@@ -75,7 +75,7 @@ export function CompareModal({
               <div key={i} className="text-center space-y-3">
                 <div className="h-32 rounded-xl overflow-hidden border" style={{ borderColor: DS.border }}>
                   <img
-                    src={getLaunchImage(launch)}
+                    src={getLaunchImage(launch)} onError={(e) => { (e.target as HTMLImageElement).src = LAUNCH_FALLBACK_IMAGE; }}
                     alt={getRocketName(launch)}
                     className="w-full h-full object-cover opacity-60"
                   />

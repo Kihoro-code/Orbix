@@ -191,11 +191,14 @@ export function getOrbitName(launch: APILaunch): string {
   return launch.mission?.orbit?.name ?? "Unknown Orbit";
 }
 
+export const LAUNCH_FALLBACK_IMAGE = "https://images.unsplash.com/photo-1534515891283-88b2cf4d6b56?w=800";
+
 export function getLaunchImage(launch: APILaunch): string {
   return (
     launch.image ??
     launch.launch_service_provider.image_url ??
-    "https://images.unsplash.com/photo-1534515891283-88b2cf4d6b56?w=800"
+    launch.rocket.configuration.image_url ??
+    LAUNCH_FALLBACK_IMAGE
   );
 }
 

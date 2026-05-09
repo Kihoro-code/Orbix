@@ -11,7 +11,7 @@ import {
 import { Starfield } from "./Starfield";
 import { motion } from "motion/react";
 import { useUpcomingLaunches, usePastLaunches, useAgencies } from "../../services/hooks";
-import { getMissionName, getRocketName, getAgencyName, getOrbitAbbrev, getLaunchImage, getAgencyColor, formatLaunchDate, formatLaunchTime } from "../../services/formatters";
+import { getMissionName, getRocketName, getAgencyName, getOrbitAbbrev, getLaunchImage, getAgencyColor, formatLaunchDate, formatLaunchTime, LAUNCH_FALLBACK_IMAGE } from "../../services/formatters";
 import type { APILaunch } from "../../services/types";
 import { PatchCard } from "./PatchCard";
 import { CalendarGrid } from "./CalendarGrid";
@@ -468,7 +468,7 @@ function ExploreCard({ launch, isSelected, onToggleCompare, onToggleFav, isFav }
         }}
       >
         <div className="relative h-40 overflow-hidden">
-          <img src={image} alt={rocketName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+          <img src={image} alt={rocketName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onError={(e) => { (e.target as HTMLImageElement).src = LAUNCH_FALLBACK_IMAGE; }} />
           <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${DS.bg}, transparent)` }} />
           <div className="absolute top-3 right-3 z-10"><APIStatusChip status={launch.status} /></div>
           {onToggleFav && (
