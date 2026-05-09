@@ -95,7 +95,3 @@ src/
 - **Cache-first strategy** with 5-minute TTL in `localStorage`
 - **Stale-while-revalidate** fallback for seamless UX during network issues
 - **Auto-polling** every 5 minutes on the Home page, every 2 minutes on Detail
-
-## 📄 License
-
-MIT
