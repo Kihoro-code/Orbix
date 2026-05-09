@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DS, APIStatusChip, CountdownInline } from "./shared";
@@ -93,7 +93,7 @@ function DayCell({
           >
             {day}
           </span>
-          <div className="flex flex-col gap-0.5 mt-0.5 w-full overflow-hidden">
+          <div className="hidden sm:flex flex-col gap-0.5 mt-0.5 w-full overflow-hidden">
             {launches.slice(0, maxDots).map((l, i) => (
               <span
                 key={i}
@@ -107,6 +107,19 @@ function DayCell({
               <span className="text-[7px]" style={{ color: DS.textMuted }}>
                 +{overflow} more
               </span>
+            )}
+          </div>
+          {/* Mobile: just show a dot indicator if there are launches */}
+          <div className="sm:hidden mt-0.5">
+            {launches.length > 0 && (
+              <div className="flex gap-0.5 flex-wrap">
+                {launches.slice(0, 2).map((_, i) => (
+                  <span key={i} className="w-1 h-1 rounded-full" style={{ backgroundColor: DS.secondary }} />
+                ))}
+                {launches.length > 2 && (
+                  <span className="text-[7px]" style={{ color: DS.textMuted }}>+{launches.length - 2}</span>
+                )}
+              </div>
             )}
           </div>
         </>
@@ -242,8 +255,11 @@ export function CalendarGrid({ launches }: { launches: APILaunch[] }) {
       <div className="grid grid-cols-7 gap-1 mb-1">
         {DAYS_OF_WEEK.map((d) => (
           <div key={d} className="text-center py-1">
-            <span className="text-[9px] tracking-widest" style={{ fontFamily: DS.fontHeading, color: DS.textMuted }}>
+            <span className="hidden sm:inline text-[9px] tracking-widest" style={{ fontFamily: DS.fontHeading, color: DS.textMuted }}>
               {d}
+            </span>
+            <span className="sm:hidden text-[9px] tracking-widest" style={{ fontFamily: DS.fontHeading, color: DS.textMuted }}>
+              {d.charAt(0)}
             </span>
           </div>
         ))}

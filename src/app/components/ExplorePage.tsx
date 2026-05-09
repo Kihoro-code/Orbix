@@ -338,7 +338,7 @@ export function ExplorePage() {
 
         {/* Sort bar — only for cards and patches views */}
         {viewMode !== "calendar" && (
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
             <div className="flex items-center gap-2">
               <RefreshButton onClick={handleRefresh} refreshing={refreshing} />
               <span className="text-xs" style={{ color: DS.textMuted }}>{filtered.length} results</span>

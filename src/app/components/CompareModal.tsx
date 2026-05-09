@@ -16,8 +16,8 @@ function SpecRow({ icon, label, a, b }: {
   b: string;
 }) {
   return (
-    <div className="flex items-center gap-3 py-2" style={{ borderBottom: `1px solid ${DS.border}` }}>
-      <div className="flex items-center gap-1.5 shrink-0 w-28" style={{ color: DS.textMuted }}>
+    <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 py-2" style={{ borderBottom: `1px solid ${DS.border}` }}>
+      <div className="flex items-center gap-1.5 shrink-0 sm:w-28" style={{ color: DS.textMuted }}>
         {icon}
         <span className="text-[10px] tracking-wider" style={{ fontFamily: DS.fontHeading }}>{label}</span>
       </div>
@@ -42,12 +42,12 @@ export function CompareModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-start md:items-center justify-center p-0 md:p-4 overflow-y-auto"
       onClick={onClose}
       style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
     >
       <div
-        className="rounded-2xl border max-w-5xl w-full max-h-[90vh] overflow-y-auto"
+        className="rounded-none md:rounded-2xl border max-w-none md:max-w-5xl w-full min-h-full md:min-h-0 md:max-h-[90vh] overflow-y-auto"
         style={{ background: DS.surface, borderColor: DS.border }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -70,7 +70,7 @@ export function CompareModal({
 
         <div className="p-6 space-y-8">
           {/* Hero images + names */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {[a, b].map((launch, i) => (
               <div key={i} className="text-center space-y-3">
                 <div className="h-32 rounded-xl overflow-hidden border" style={{ borderColor: DS.border }}>
@@ -143,8 +143,8 @@ export function CompareModal({
               b={rocketB.leo_capacity != null ? `${rocketB.leo_capacity.toLocaleString()}kg` : "N/A"}
             />
 
-            <div className="flex items-center gap-3 py-2" style={{ borderBottom: `1px solid ${DS.border}` }}>
-              <div className="flex items-center gap-1.5 shrink-0 w-28" style={{ color: DS.textMuted }}>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 py-2" style={{ borderBottom: `1px solid ${DS.border}` }}>
+              <div className="flex items-center gap-1.5 shrink-0 sm:w-28" style={{ color: DS.textMuted }}>
                 <OrbitTag orbit={getOrbitAbbrev(a)} />
               </div>
               <div className="flex-1 grid grid-cols-2 gap-4">

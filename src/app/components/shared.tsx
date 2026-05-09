@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
-import { Search, Menu, X, Telescope, RotateCw, LayoutGrid, Shield, CalendarDays, GitCompare, Star } from "lucide-react";
+import { Search, Menu, X, Telescope, RotateCw, LayoutGrid, Shield, CalendarDays, GitCompare, Star, Home, Radio } from "lucide-react";
 import type { Status } from "./launchData";
 import { STATUS_LABELS, STATUS_DOT_COLORS, AGENCY_COLORS } from "./launchData";
 import type { APIStatus, APIAgency, APILaunch } from "../../services/types";
@@ -323,8 +323,8 @@ export function TabBar<T extends string>({
 }) {
   return (
     <div
-      className="flex gap-1 p-1 rounded-xl border w-fit"
-      style={{ borderColor: DS.border, background: DS.glass }}
+      className="flex gap-1 p-1 rounded-xl border w-fit max-w-full overflow-x-auto"
+      style={{ borderColor: DS.border, background: DS.glass, scrollbarWidth: "none" }}
     >
       {tabs.map((tab) => (
         <button
@@ -486,7 +486,7 @@ export function CompareDock({
 
   return (
     <div
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-3 rounded-2xl border shadow-2xl"
+      className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-3 rounded-2xl border shadow-2xl"
       style={{
         background: `${DS.surface}F0`,
         borderColor: `${DS.secondary}30`,
@@ -599,16 +599,57 @@ export function StatPill({ icon, value, label }: { icon: ReactNode; value: strin
 
 /* ─── Page Shell ─── */
 export function PageShell({ children }: { children: ReactNode }) {
+  const location = useLocation();
+  const isHome = location.pathname === "/";
+  const isExplore = location.pathname === "/explore";
+  const isLive = location.pathname === "/live";
+
   return (
     <div className="min-h-screen relative" style={{ background: DS.pageGradient, fontFamily: DS.fontBody }}>
-      {children}
+      <div className="pb-16 md:pb-0" style={{ paddingBottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}>
+        {children}
+      </div>
+      {/* Bottom tab bar — mobile only */}
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t flex items-center justify-around"
+        style={{
+          borderColor: DS.border,
+          background: "rgba(10,10,15,0.95)",
+          backdropFilter: "blur(20px)",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          height: 56,
+        }}
+      >
+        <MobileTab to="/" icon={Home} label="Home" active={isHome} />
+        <MobileTab to="/explore" icon={Search} label="Explore" active={isExplore} />
+        <MobileTab to="/live" icon={Radio} label="Live" active={isLive} />
+      </nav>
     </div>
+  );
+}
+
+function MobileTab({ to, icon: Icon, label, active }: { to: string; icon: typeof Home; label: string; active: boolean }) {
+  return (
+    <Link
+      to={to}
+      className="flex flex-col items-center justify-center gap-0.5 no-underline min-w-[64px]"
+    >
+      <Icon
+        className="w-5 h-5 transition-colors"
+        style={{ color: active ? DS.primary : DS.textMuted }}
+      />
+      <span
+        className="text-[10px] tracking-wider transition-colors"
+        style={{ fontFamily: DS.fontHeading, color: active ? DS.primary : DS.textMuted }}
+      >
+        {label}
+      </span>
+    </Link>
   );
 }
 
 /* ─── Navbar (Desktop + Mobile) ─── */
 export function Navbar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const isHome = location.pathname === "/";
   const isExplore = location.pathname === "/explore";
@@ -641,6 +682,7 @@ export function Navbar() {
           <NavLink to="/live" active={isLive}>LIVE</NavLink>
         </div>
 
+        {/* Search + mobile nav spacer */}
         <div className="flex items-center gap-3">
           <Link
             to="/explore"
@@ -651,25 +693,8 @@ export function Navbar() {
           >
             <Search className="w-4 h-4" style={{ color: DS.textMuted }} />
           </Link>
-          {/* Mobile hamburger */}
-          <button
-            className="md:hidden w-9 h-9 rounded-full border flex items-center justify-center"
-            style={{ borderColor: `${DS.textHeading}10` }}
-            onClick={() => setMobileOpen(!mobileOpen)}
-          >
-            {mobileOpen ? <X className="w-4 h-4" style={{ color: DS.textBody }} /> : <Menu className="w-4 h-4" style={{ color: DS.textBody }} />}
-          </button>
         </div>
       </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="md:hidden border-t px-6 py-4 space-y-3" style={{ borderColor: DS.border, background: "rgba(10,10,15,0.95)" }}>
-          <Link to="/" className="block py-2 text-sm tracking-wider no-underline" style={{ fontFamily: DS.fontHeading, fontSize: 11, color: isHome ? DS.textHeading : DS.textMuted }} onClick={() => setMobileOpen(false)}>HOME</Link>
-          <Link to="/explore" className="block py-2 text-sm tracking-wider no-underline" style={{ fontFamily: DS.fontHeading, fontSize: 11, color: isExplore ? DS.textHeading : DS.textMuted }} onClick={() => setMobileOpen(false)}>EXPLORE</Link>
-          <Link to="/live" className="block py-2 text-sm tracking-wider no-underline" style={{ fontFamily: DS.fontHeading, fontSize: 11, color: isLive ? DS.textHeading : DS.textMuted }} onClick={() => setMobileOpen(false)}>LIVE</Link>
-        </div>
-      )}
     </nav>
   );
 }
