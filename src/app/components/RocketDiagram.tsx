@@ -27,7 +27,6 @@ export function RocketDiagram({ launches }: { launches: APILaunch[] }) {
 
   const specs = launches.map(getRocketSpec).filter((s) => s.height > 0);
   const maxHeight = Math.max(...specs.map((s) => s.height), 1);
-  const [, setResizeTick] = useState(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
