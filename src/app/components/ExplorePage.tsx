@@ -11,7 +11,7 @@ import {
 import { Starfield } from "./Starfield";
 import { motion } from "motion/react";
 import { useUpcomingLaunches, usePastLaunches, useAgencies } from "../../services/hooks";
-import { getMissionName, getRocketName, getAgencyName, getOrbitAbbrev, getLaunchImage, getAgencyColor, formatLaunchDate, formatLaunchTime, LAUNCH_FALLBACK_IMAGE } from "../../services/formatters";
+import { getMissionName, getRocketName, getAgencyName, getOrbitAbbrev, getLaunchImage, getAgencyColor, getAgencyAbbrev, formatLaunchDate, formatLaunchTime, LAUNCH_FALLBACK_IMAGE } from "../../services/formatters";
 import type { APILaunch } from "../../services/types";
 import { PatchCard } from "./PatchCard";
 import { CalendarGrid } from "./CalendarGrid";
@@ -298,7 +298,7 @@ export function ExplorePage() {
               {topAgencies.map(a => (
                 <FilterChip
                   key={a.id}
-                  label={a.name.length > 20 ? a.name.split(" ").map(w => w[0].toUpperCase()).join("") : a.name}
+                  label={a.name.length > 20 ? getAgencyAbbrev(a.name) : a.name}
                   active={selectedAgency === a.name}
                   onClick={() => { setSelectedAgency(prev => prev === a.name ? "" : a.name); setVisibleCount(6); }}
                   dot={getAgencyColor(a.name)}
