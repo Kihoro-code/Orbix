@@ -4,7 +4,7 @@ import { Search, Menu, X, Telescope, RotateCw, LayoutGrid, Shield, CalendarDays,
 import type { Status } from "./launchData";
 import { STATUS_LABELS, STATUS_DOT_COLORS, AGENCY_COLORS } from "./launchData";
 import type { APIStatus, APIAgency, APILaunch } from "../../services/types";
-import { getStatusConfig, getAgencyAbbrev, getAgencyColor } from "../../services/formatters";
+import { getStatusConfig, getAgencyAbbrev, getAgencyColor, getAgencyLogoUrl } from "../../services/formatters";
 
 /* ─── Design Tokens (JS mirror of theme.css) ─── */
 export const DS = {
@@ -746,14 +746,15 @@ export function APIStatusChip({ status }: { status: APIStatus }) {
 export function APIAgencyBadge({ agency, size = "sm" }: { agency: { name: string; logo_url?: string | null }; size?: "sm" | "md" }) {
   const color = getAgencyColor(agency.name);
   const abbrev = getAgencyAbbrev(agency.name);
+  const logoUrl = getAgencyLogoUrl(agency);
   const dim = size === "md" ? "w-7 h-7" : "w-5 h-5";
   const textSize = size === "md" ? "text-[10px]" : "text-[8px]";
 
   return (
     <div className="flex items-center gap-2">
-      {agency.logo_url ? (
+      {logoUrl ? (
         <img
-          src={agency.logo_url}
+          src={logoUrl}
           alt={agency.name}
           className={`${dim} rounded-full object-cover shrink-0`}
           style={{ backgroundColor: `${color}22` }}

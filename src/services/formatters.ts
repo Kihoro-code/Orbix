@@ -51,6 +51,25 @@ const AGENCY_ABBREVS: Record<string, string> = {
   "Arianespace": "ASE",
 };
 
+const AGENCY_LOGOS: Record<string, string> = {
+  "National Aeronautics and Space Administration": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/NASA_logo.svg/120px-NASA_logo.svg.png",
+  "SpaceX": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/SpaceX_logo_black.svg/120px-SpaceX_logo_black.svg.png",
+  "European Space Agency": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/ESA_logo.svg/120px-ESA_logo.svg.png",
+  "United Launch Alliance": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/United_Launch_Alliance_logo.svg/120px-United_Launch_Alliance_logo.svg.png",
+  "Indian Space Research Organization": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Indian_Space_Research_Organisation_Logo.svg/120px-Indian_Space_Research_Organisation_Logo.svg.png",
+  "Roscosmos": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Roscosmos_logo_en.svg/120px-Roscosmos_logo_en.svg.png",
+  "Russian Federal Space Agency (ROSCOSMOS)": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Roscosmos_logo_en.svg/120px-Roscosmos_logo_en.svg.png",
+  "Japan Aerospace Exploration Agency": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Jaxa_logo.svg/120px-Jaxa_logo.svg.png",
+  "Rocket Lab": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Rocket_Lab_logo.svg/120px-Rocket_Lab_logo.svg.png",
+  "Arianespace": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Arianespace_logo.svg/120px-Arianespace_logo.svg.png",
+  "China Aerospace Science and Technology Corporation": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/CASC_logo.svg/120px-CASC_logo.svg.png",
+  "China National Space Administration": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/China_National_Space_Administration_logo.svg/120px-China_National_Space_Administration_logo.svg.png",
+};
+
+export function getAgencyLogoUrl(agency: { name: string; logo_url?: string | null }): string | null {
+  return AGENCY_LOGOS[agency.name] ?? agency.logo_url ?? null;
+}
+
 export function getAgencyAbbrev(name: string): string {
   return AGENCY_ABBREVS[name] ?? name.substring(0, 4).toUpperCase();
 }
